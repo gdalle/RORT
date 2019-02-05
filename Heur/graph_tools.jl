@@ -13,7 +13,7 @@ function get_arcs(sv::Data)
 end
 
 function shortest_path(sv::Data, x::Dict{Tuple{Int64,Int64}, Int64})
-    g = SimpleWeightedGraph(sv.n)
+    g = SimpleWeightedDiGraph(sv.n)
     for (u, v) in get_arcs(sv)
         penalized = get(x, (u, v), 0)
         cost = sv.c[u][v] + penalized * sv.d[u][v]
