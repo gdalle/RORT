@@ -29,3 +29,19 @@ function shortest_path(sv::Data, x::Dict{Tuple{Int64,Int64}, Int64})
     end
     return path_cost, path
 end
+
+function shortest_path_subgraph(sv::Data, sub_arcs::Array{Tuple{Int, Int}, 1})
+    g::SimpleWeightedDiGraph = SimpleWeightedDiGraph(sv.n)
+    for (u, v) in sub_arcs
+        add_edge!(g, u, v, sv.c[u][v])
+    end
+    sp::LightGraphs.DijkstraState = dijkstra_shortest_paths(g, 1)
+    path_cost::Float64 = sp.dists[sv.n]
+    path::Array{Int64, 1} = []
+    next_node::Int64 = sv.n
+    while next_node != 0
+        prepend!(path, next_node)
+        next_node = sp.parents[next_node]
+    end
+    return path_cost, path
+end
