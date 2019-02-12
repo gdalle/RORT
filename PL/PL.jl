@@ -76,7 +76,7 @@ function solve_PL3_master(
         slave_paths::Array{Array{Tuple{Int, Int}, 1}, 1},
         solver::MathProgBase.SolverInterface.AbstractMathProgSolver
     )
-    m::Model = Model(solver=CbcSolver())
+    m::Model = Model(solver=solver)
     @objective(m, Max, 1)
     @variable(m, x[arcs], Bin)
     @constraint(m, sum(x) <= k);
@@ -123,6 +123,7 @@ function solve_PL3(
     slave_paths::Array{Array{Tuple{Int, Int}, 1}, 1} = []
     cost_paths::Array{Float32, 1} = []
     x::Array{Array{Tuple{Int, Int}, 1}, 1} = []
+    count=0
     while not_over
         not_over, arc_suppressed = solve_PL3_master(sv, arcs, slave_paths, solver)
         if not_over
@@ -132,7 +133,8 @@ function solve_PL3(
             push!(slave_paths, path)
             push!(cost_paths, path_cost)
         end
+        count+=1
     end
     maxval, maxidx = findmax(cost_paths)
-    return maxval, x[maxidx]
+    return maxval, x[maxidx], count
 end
