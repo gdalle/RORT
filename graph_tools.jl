@@ -1,5 +1,7 @@
 include("instances_io.jl")
 
+using JuMP
+
 using LightGraphs, SimpleWeightedGraphs
 
 function get_arcs(sv::Data)
