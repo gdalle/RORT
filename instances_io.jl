@@ -1,3 +1,6 @@
+using Random
+Random.seed!(63)
+
 @doc """
 Type représentant une entrée du problème d'interdiction de plus court chemins.
 
@@ -11,19 +14,20 @@ Il contient 6 attributs:
 
 Il n'est pas nécessaire de construire vous même les entrées, vous avez 3 fonctions pour cela:
 - `generate(l, c, k, maxc, maxd)` génère un graphe de type grille
-- `generate(l, c, k, maxc, maxd, filename)` génère un graphe de type grille et écrit le tout dans le fichier filename. 
+- `generate(l, c, k, maxc, maxd, filename)` génère un graphe de type grille et écrit le tout dans le fichier filename.
 - `generate(filename) renvoie l'instance générée dans le fichier filename
 """ ->
 mutable struct Data
   n::Int # nbre sommets
   m::Int # nbre arcs
   k::Int # nbre arcs penalises
+  s::Int # nombre de voisins de chaque noeud dans la colonne suivante
   adj::Array{Array{Bool}} # matrice adjacence
   c::Array{Array{Int}} # matrice couts
   d::Array{Array{Int}} # matrice couts additionels (penalite)
 end
 
-Data() = Data(0, 0, 0, [], [], []) # Constructeur par défaut
+Data() = Data(0, 0, 0, 0, [], [], []) # Constructeur par défaut
 
 
 @doc """
@@ -49,12 +53,14 @@ s..2..5..8..t\n
 
 L'attaquant peut pénaliser `k` arcs. Le coût initial d'un arc est choisi aléatoirement entre 1 et `maxc`. La pénalité d'un arc est choisie entre 1 et `maxd`. Si `maxd` est négatif alors la pénalité est infinie (elle est égale à `maxc` * le nombre d'arêtes + 1, supérieur au plus long des chemins de s à t dans le graphe initial).
 """ ->
-function generate(l::Int, c::Int, k::Int, maxc::Int, maxd::Int)
+function generate(l::Int, c::Int, k::Int, s::Int, maxc::Int, maxd::Int)
   sv = Data()
   sv.n = l * c + 2
-  sv.m = (c-2)*(5*l-4)+5*l-2
+  sv.m = 0
+  # sv.m = (c-2)*(5*l-4)+5*l-2
   sv.k = k
-    
+  sv.s = s
+
   # Initialisation des matrices d'adjacence, de coût et de pénalité
   for i in 1:sv.n
     push!(sv.adj, [])
@@ -66,33 +72,43 @@ function generate(l::Int, c::Int, k::Int, maxc::Int, maxd::Int)
       push!(sv.d[i], 0) # on remplit la ligne de zéros
     end
   end
- 
+
   arcs = []
   # Liaisons entre la source et la première colonne
   for i in 1:l
     push!(arcs, (1, i + 1))
-  end  
-  
+    sv.m += 1
+  end
+
   # Liaisons entre la dernière colonne et le puits
   for i in 1:l
     push!(arcs, (sv.n - i, sv.n))
-  end  
-  
+    sv.m += 1
+  end
+
   # Liaisons entre deux colonnes successives
   for column in 1:(c - 1)
     for line in 1:l
+      possible_neighbors = Set(1:l)
+      pop!(possible_neighbors, line)
+      for neighboring_line in rand(possible_neighbors, s)
+        u = (column - 1) * l + 1 + line
+        v = column * l + 1 + neighboring_line
+        push!(arcs, (u, v))
+        sv.m += 1
+      end
 
-      u = (column - 1) * l + 1 + line
-      push!(arcs, (u, u + l))
-      if line > 1
-        push!(arcs, (u, u + l - 1))
-      end
-      if line < l 
-        push!(arcs, (u, u + l + 1))
-      end
+      # u = (column - 1) * l + 1 + line
+      # push!(arcs, (u, u + l))
+      # if line > 1
+      #   push!(arcs, (u, u + l - 1))
+      # end
+      # if line < l
+      #   push!(arcs, (u, u + l + 1))
+      # end
 
     end
-  end  
+  end
 
   # Liaisons entre les noeuds d'une même colonne
   for column in 2:(c - 1)
@@ -100,6 +116,7 @@ function generate(l::Int, c::Int, k::Int, maxc::Int, maxd::Int)
       u = (column - 1) * l + 1 + line
       push!(arcs, (u, u + 1))
       push!(arcs, (u + 1, u))
+      sv.m += 2
     end
   end
 
@@ -129,7 +146,7 @@ Le format du fichier est le suivant:
 function generate(l::Int, c::Int, k::Int, maxc::Int, maxd::Int, filename::String)
   sv = generate(l, c, k, maxc, maxd)
   open(filename, "w") do file
-    write(file, "$(sv.n) $(sv.m) $(sv.k)\n") 
+    write(file, "$(sv.n) $(sv.m) $(sv.k)\n")
     for i in 1:sv.n
       for j in 1:sv.n
         if sv.adj[i][j]
@@ -137,13 +154,13 @@ function generate(l::Int, c::Int, k::Int, maxc::Int, maxd::Int, filename::String
         end
       end
     end
-  
+
   end
   return sv
 end
 
 
-@doc """ 
+@doc """
 generate(filename::String)
 
 Lecture fichier de données.
@@ -154,10 +171,10 @@ Le fichier doit être au format généré par la fonction `generate(l::Int, c::I
 - m lignes contenant 4 entiers positifs u v c et d où u et v sont entre 1 et n (inclus)
 """ ->
 function generate(filename::String)
-  
+
   open(filename) do file
     lines = readlines(file)  # fichier de l'instance à resoudre
-    
+
     sv = Data()
 
     # Nombre de noeuds et d'arêtes, et nombre d'arcs pénalisés
@@ -193,4 +210,3 @@ function generate(filename::String)
   end
 
 end
-

@@ -39,7 +39,7 @@ function random_child(
 
 end
 
-function evaluate_subtree(ordered_arcs::Array{Tuple{Int64, Int64}, 1},
+function evaluate_subtree(sv::Data, ordered_arcs::Array{Tuple{Int64, Int64}, 1},
         x::Dict{Tuple{Int64, Int64}, Int64},
         k::Int64,
         p::Int64
@@ -67,9 +67,9 @@ function tree_search(sv::Data, p::Int)
             x[next_arc] = 0
         else
             x[next_arc] = 0
-            mean_cost_0 = evaluate_subtree(ordered_arcs, x, k, p)
+            mean_cost_0 = evaluate_subtree(sv, ordered_arcs, x, k, p)
             x[next_arc] = 1
-            mean_cost_1 = evaluate_subtree(ordered_arcs, x, k-1, p)
+            mean_cost_1 = evaluate_subtree(sv, ordered_arcs, x, k-1, p)
 
             if mean_cost_0 > mean_cost_1
                 x[next_arc] = 0
