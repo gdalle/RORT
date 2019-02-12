@@ -12,7 +12,7 @@ function solve_PL1(
 
     arcs::Array{Tuple{Int64, Int64}, 1} = get_arcs(sv)
 
-    m = Model(solver=CbcSolver())
+    m = Model(solver=solver)
 
     @variable(m, x[arcs], Bin)
     @variable(m, p[1:sv.n])
@@ -59,7 +59,7 @@ function solve_PL2(
         global x_opt = getvalue(x)
         obj = getobjectivevalue(master)
         (path_cost, path, path_edges) = shortest_path(sv, x_opt)
-        println(path_cost, " <= value <= ", obj)
+        #println(path_cost, " <= value <= ", obj)
         @constraint(
             master,
             sum(sv.c[u][v] + sv.d[u][v] * x[(u,v)] for (u, v) in path_edges) >= z
