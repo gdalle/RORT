@@ -52,6 +52,7 @@ function solve_PL2(
 
     obj = Inf
     path_cost = 0
+    count = 0
 
     while obj > path_cost + 0.5
         solve(master, relaxation=false)
@@ -63,9 +64,10 @@ function solve_PL2(
             master,
             sum(sv.c[u][v] + sv.d[u][v] * x[(u,v)] for (u, v) in path_edges) >= z
         )
+        count+=1
     end
 
-    return obj, x_opt
+    return obj, x_opt, count
 end
 
 function solve_PL3_master(
