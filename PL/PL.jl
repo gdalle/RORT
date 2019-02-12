@@ -30,7 +30,7 @@ function solve_PL1(
     x_val = getvalue(x)
     pi_val = getvalue(p)
 
-    return obj, x_val, pi_val
+    return obj, x_val
 end
 
 function solve_PL2(
@@ -134,5 +134,5 @@ function solve_PL3(
         end
     end
     maxval, maxidx = findmax(cost_paths)
-    return x[maxidx], maxval
+    return maxval, x[maxidx]
 end
