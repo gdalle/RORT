@@ -4,6 +4,7 @@ using JuMP
 using LightGraphs, SimpleWeightedGraphs
 
 function get_arcs(sv::Data)
+    return sv.arcs
     arcs::Array{Tuple{Int64, Int64}, 1} = []
     for u in 1:sv.n, v in 1:sv.n
         if sv.adj[u][v]

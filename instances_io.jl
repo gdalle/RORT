@@ -1,5 +1,6 @@
 using Random
 Random.seed!(63)
+using StatsBase
 
 @doc """
 Type représentant une entrée du problème d'interdiction de plus court chemins.
@@ -25,9 +26,10 @@ mutable struct Data
   adj::Array{Array{Bool}} # matrice adjacence
   c::Array{Array{Int}} # matrice couts
   d::Array{Array{Int}} # matrice couts additionels (penalite)
+  arcs::Array{Tuple{Int64, Int64}, 1}
 end
 
-Data() = Data(0, 0, 0, 0, [], [], []) # Constructeur par défaut
+Data() = Data(0, 0, 0, 0, [], [], [], []) # Constructeur par défaut
 
 
 @doc """
@@ -89,9 +91,8 @@ function generate(l::Int, c::Int, k::Int, s::Int, maxc::Int, maxd::Int)
   # Liaisons entre deux colonnes successives
   for column in 1:(c - 1)
     for line in 1:l
-      possible_neighbors = Set(1:l)
-      pop!(possible_neighbors, line)
-      for neighboring_line in rand(possible_neighbors, s)
+      possible_neighbors = collect(1:l)
+      for neighboring_line in sample(possible_neighbors, s, replace=false)
         u = (column - 1) * l + 1 + line
         v = column * l + 1 + neighboring_line
         push!(arcs, (u, v))
@@ -126,6 +127,8 @@ function generate(l::Int, c::Int, k::Int, s::Int, maxc::Int, maxd::Int)
     sv.c[i][j] = rand(1:maxc)
     sv.d[i][j] = (maxd > 0) ? rand(1:maxd) : (maxc * sv.m + 1)
   end
+
+  sv.arcs=arcs
 
   return sv
 end
