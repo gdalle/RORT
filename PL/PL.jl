@@ -35,7 +35,8 @@ end
 
 function solve_PL2(
         sv::Data,
-        solver::MathProgBase.SolverInterface.AbstractMathProgSolver
+        solver::MathProgBase.SolverInterface.AbstractMathProgSolver,
+        timelimit::Int
     )
 
     arcs::Array{Tuple{Int64, Int64}, 1} = get_arcs(sv)
@@ -53,8 +54,9 @@ function solve_PL2(
     obj = Inf
     path_cost = 0
     count = 0
+    start=time()
 
-    while obj > path_cost + 0.5
+    while (obj > path_cost + 0.5) && (time()-start<timelimit)
         solve(master, relaxation=false)
         global x_opt = getvalue(x)
         obj = getobjectivevalue(master)
@@ -111,7 +113,8 @@ end
 
 function solve_PL3(
         sv::Data,
-        solver::MathProgBase.SolverInterface.AbstractMathProgSolver
+        solver::MathProgBase.SolverInterface.AbstractMathProgSolver,
+        timelimit::Int
     )
     arcs::Array{Tuple{Int, Int}, 1} = []
     for u in 1:sv.n, v in 1:sv.n
@@ -124,7 +127,8 @@ function solve_PL3(
     cost_paths::Array{Float32, 1} = []
     x::Array{Array{Tuple{Int, Int}, 1}, 1} = []
     count=0
-    while not_over
+    start=time()
+    while not_over && (time()-start<timelimit)
         not_over, arc_suppressed = solve_PL3_master(sv, arcs, slave_paths, solver)
         if not_over
             push!(x, arc_suppressed)
