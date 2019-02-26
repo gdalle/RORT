@@ -6,22 +6,22 @@ include("PL/PL.jl");
 include("Heur/Heur.jl")
 
 param_sets = Dict{String, Array{Int, 1}}()
-param_sets["L"] = collect(3:8)
-param_sets["C"] = collect(3:8)
-param_sets["K"] = vcat(collect(1:10), collect(12:2:20))
+param_sets["L"] = collect(3:10)
+param_sets["C"] = collect(3:10)
+param_sets["K"] = collect(1:2:40)
 param_sets["S"] = collect(1:4)
-param_sets["MAXC"] = vcat(collect(1:10), collect(20:10:100))
-param_sets["MAXD"] = vcat(collect(1:10), collect(20:10:100))
+param_sets["MAXC"] = []
+param_sets["MAXD"] = vcat(vcat(collect(1:10), collect(20:10:100)), collect(200:100:1000))
 
 print(param_sets)
 
 # Default values
 l = 5
 c = 5
-k = 10
+k = 20
 s = 3
-maxc = 5
-maxd = 50
+maxc = 10
+maxd = 20
 
 # Number of runs for each (method, params)
 nb_iterations = 3
@@ -32,12 +32,13 @@ df = DataFrame(
     param_value=Int[],
     iteration=Int[],
     time=Float64[],
-    cuts=Int[]
+    cuts=Int[],
+    objectif=Float64[]
 )
 
-for param in ["L", "C", "K", "S", "MAXC", "MAXD"]
+for param in ["L", "C", "K", "S", "MAXD"]
     for param_value in param_sets[param]
-        for iteration in 1:3
+        for iteration in 1:5
 
             if param == "L"
                 sv = generate(param_value, c, k, s, maxc, maxd)
@@ -54,17 +55,20 @@ for param in ["L", "C", "K", "S", "MAXC", "MAXD"]
             end
 
             time = @elapsed obj, x_opt = solve_PL1(sv, CplexSolver(CPX_PARAM_SCRIND=0))
-            push!(df, ("PL1", param, param_value, iteration, time, 0))
+            push!(df, ("PL1", param, param_value, iteration, time, 0, obj))
             time = @elapsed obj, x_opt, cuts = solve_PL2(sv, CplexSolver(CPX_PARAM_SCRIND=0))
-            push!(df, ("PL2", param, param_value, iteration, time, cuts))
+            push!(df, ("PL2", param, param_value, iteration, time, cuts, obj))
             time = @elapsed obj, x_opt, cuts = solve_PL3(sv, CplexSolver(CPX_PARAM_SCRIND=0))
-            push!(df, ("PL3", param, param_value, iteration, time, cuts))
-            time = @elapsed obj, x_opt = tree_search(sv, 100)
-            push!(df, ("MCTS", param, param_value, iteration, time, 0))
+            push!(df, ("PL3", param, param_value, iteration, time, cuts, obj))
+            for p in [10,20,50,100,200,500]
+                time = @elapsed obj, x_opt = tree_search(sv, p)
+                push!(df, ("MCTS"*string(p), param, param_value, iteration, time, 0, obj))
+            end
 
         end
 
         CSV.write("Results.csv", df)
 
     end
+    print(param)
 end
