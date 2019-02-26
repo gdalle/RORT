@@ -98,13 +98,21 @@ function evaluate_subtree(
     end
 end
 
-function tree_search(sv::Data, p::Int, greedy::Bool)
+function tree_search(sv::Data, p::Int, greedy::Bool, time_limit::Float64)
     x::Dict{Tuple{Int64, Int64}, Int64} = Dict{Tuple{Int64, Int64}, Int64}()
     k::Int64 = sv.k
 
+    shuffle!(sv.arcs)
+
+    arcs_explored::Int64 = 0
+    start_time::Float64 = time()
+
     while true
 
-        if length(x) == length(get_arcs(sv))
+        if (
+            length(x) == length(get_arcs(sv)) ||
+            (time() - start_time > time_limit)
+        )
             break
         end
 
@@ -126,6 +134,8 @@ function tree_search(sv::Data, p::Int, greedy::Bool)
                 k -= 1
             end
         end
+
+        arcs_explored += 1
     end
 
     return shortest_path(sv, x)[1], x
