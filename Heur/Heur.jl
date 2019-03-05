@@ -2,8 +2,8 @@ using Random; Random.seed!(63);
 using Statistics
 using StatsBase
 
-include("../instances_io.jl")
-include("../graph_tools.jl");
+include("instances_io.jl")
+include("graph_tools.jl");
 
 
 function choose_next_arc_fast(sv::Data, x::Dict{Tuple{Int64, Int64}, Int64})

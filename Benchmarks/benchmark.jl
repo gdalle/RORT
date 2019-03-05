@@ -1,9 +1,9 @@
 using DataFrames
 using CSV
 using CPLEX
-include("instances_io.jl")
-include("PL/PL.jl");
-include("Heur/Heur.jl")
+include("../PL/instances_io.jl")
+include("../PL/PL.jl");
+include("../Heur/Heur.jl")
 
 param_sets = Dict{String, Array{Int, 1}}()
 param_sets["L"] = collect(3:10)
@@ -25,6 +25,8 @@ maxd = 20
 
 # Number of runs for each (method, params)
 nb_iterations = 3
+# Time limit (s)
+time_limit = 15.
 
 df = DataFrame(
     method=String[],
@@ -54,16 +56,21 @@ for param in ["L", "C", "K", "S", "MAXD"]
                 sv = generate(l, c, k, s, maxc, param_value)
             end
 
-            time = @elapsed obj, x_opt = solve_PL1(sv, CplexSolver(CPX_PARAM_SCRIND=0,CPX_PARAM_TILIM=15))
+            time = @elapsed obj, x_opt = solve_PL1(
+                sv, CplexSolver(CPX_PARAM_SCRIND=0,CPX_PARAM_TILIM=time_limit))
             push!(df, ("PL1", param, param_value, iteration, time, 0, obj))
-            #time = @elapsed obj, x_opt, cuts = solve_PL2(sv, CplexSolver(CPX_PARAM_SCRIND=0), 15)
-            #push!(df, ("PL2", param, param_value, iteration, time, cuts, obj))
-            #time = @elapsed obj, x_opt, cuts = solve_PL3(sv, CplexSolver(CPX_PARAM_SCRIND=0), 15)
-            #push!(df, ("PL3", param, param_value, iteration, time, cuts, obj))
+            time = @elapsed obj, x_opt, cuts = solve_PL2(
+                sv, CplexSolver(CPX_PARAM_SCRIND=0), time_limit)
+            push!(df, ("PL2", param, param_value, iteration, time, cuts, obj))
+            time = @elapsed obj, x_opt, cuts = solve_PL3(
+                sv, CplexSolver(CPX_PARAM_SCRIND=0), time_limit)
+            push!(df, ("PL3", param, param_value, iteration, time, cuts, obj))
             for p in [10,20,50,100,200]
-                time = @elapsed obj, x_opt = tree_search(sv, p, false, 5.)
+                greedy = false
+                time = @elapsed obj, x_opt = tree_search(sv, p, greedy, time_limit)
                 push!(df, ("MCTS0_"*string(p), param, param_value, iteration, time, 0, obj))
-                time = @elapsed obj, x_opt = tree_search(sv, p, true, 5.)
+                greedy = true
+                time = @elapsed obj, x_opt = tree_search(sv, p, greedy, time_limit)
                 push!(df, ("MCTS"*string(p), param, param_value, iteration, time, 0, obj))
             end
 

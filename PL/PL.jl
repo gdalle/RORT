@@ -2,12 +2,12 @@ using Random; Random.seed!(63);
 using MathProgBase
 using JuMP
 
-include("../instances_io.jl")
-include("../graph_tools.jl");
+include("instances_io.jl")
+include("graph_tools.jl");
 
 function solve_PL1(
         sv::Data,
-        solver::MathProgBase.SolverInterface.AbstractMathProgSolver
+        solver::MathProgBase.SolverInterface.AbstractMathProgSolver,
     )
 
     arcs::Array{Tuple{Int64, Int64}, 1} = get_arcs(sv)
@@ -36,7 +36,7 @@ end
 function solve_PL2(
         sv::Data,
         solver::MathProgBase.SolverInterface.AbstractMathProgSolver,
-        timelimit::Int
+        timelimit::Float64
     )
 
     arcs::Array{Tuple{Int64, Int64}, 1} = get_arcs(sv)
@@ -81,7 +81,7 @@ function solve_PL3_master(
     m::Model = Model(solver=solver)
     @objective(m, Max, 1)
     @variable(m, x[arcs], Bin)
-    @constraint(m, sum(x) <= k);
+    @constraint(m, sum(x) <= sv.k)
     for path in slave_paths
         @constraint(m, sum(x[a] for a in path) >= 1)
     end
@@ -114,7 +114,7 @@ end
 function solve_PL3(
         sv::Data,
         solver::MathProgBase.SolverInterface.AbstractMathProgSolver,
-        timelimit::Int
+        timelimit::Float64
     )
     arcs::Array{Tuple{Int, Int}, 1} = []
     for u in 1:sv.n, v in 1:sv.n
