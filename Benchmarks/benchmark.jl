@@ -24,9 +24,9 @@ maxc = 10
 maxd = 20
 
 # Number of runs for each (method, params)
-nb_iterations = 3
+nb_iterations = 5
 # Time limit (s)
-time_limit = 15.
+time_limit = 10.
 
 df = DataFrame(
     method=String[],
@@ -40,7 +40,7 @@ df = DataFrame(
 
 for param in ["L", "C", "K", "S", "MAXD"]
     for param_value in param_sets[param]
-        for iteration in 1:5
+        for iteration in 1:nb_iterations
 
             if param == "L"
                 sv = generate(param_value, c, k, s, maxc, maxd)
@@ -71,7 +71,7 @@ for param in ["L", "C", "K", "S", "MAXD"]
                 push!(df, ("MCTS0_"*string(p), param, param_value, iteration, time, 0, obj))
                 greedy = true
                 time = @elapsed obj, x_opt = tree_search(sv, p, greedy, time_limit)
-                push!(df, ("MCTS"*string(p), param, param_value, iteration, time, 0, obj))
+                push!(df, ("MCTS_"*string(p), param, param_value, iteration, time, 0, obj))
             end
 
         end
